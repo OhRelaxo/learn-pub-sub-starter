@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
-	"os/signal"
 
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/gamelogic"
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/pubsub"
@@ -13,20 +11,23 @@ import (
 )
 
 func main() {
-	fmt.Println("Starting Peril server...")
 	const serverUrl = "amqp://guest:guest@localhost:5672/"
+	fmt.Println("Starting Peril server...")
+
 	conn, err := amqp.Dial(serverUrl)
 	if err != nil {
 		log.Fatalf("faild to connect to amqp server: %v", err)
 	}
 	defer conn.Close()
 	log.Println("successfully connected to server")
+
 	gamelogic.PrintServerHelp()
+
 	newChan, err := conn.Channel()
 	if err != nil {
 		log.Fatalf("unable to create a channel from estableshed connection: %v", err)
 	}
-	stopLoop := false
+
 	for {
 		userInput := gamelogic.GetInput()
 		if len(userInput) == 0 {
@@ -46,17 +47,9 @@ func main() {
 			}
 		case "quit":
 			log.Println("exiting...")
-			stopLoop = true
+			return
 		default:
 			log.Printf("command: %v not found!", command)
 		}
-		if stopLoop {
-			break
-		}
 	}
-	// shutting down the server
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, os.Interrupt)
-	<-signalChan
-	log.Println("shutting down...")
 }
