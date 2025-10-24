@@ -28,7 +28,7 @@ func main() {
 
 	_, queue, err := pubsub.DeclareAndBind(conn, routing.ExchangePerilDirect, routing.PauseKey+"."+username, routing.PauseKey, pubsub.Transient)
 	if err != nil {
-		log.Printf("could not subscribe to pause: %v\n", err)
+		log.Fatalf("could not subscribe to pause: %v\n", err)
 	}
 	fmt.Printf("Queue %v declared and bound!\n", queue.Name)
 

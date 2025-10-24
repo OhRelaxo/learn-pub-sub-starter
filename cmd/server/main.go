@@ -28,6 +28,12 @@ func main() {
 		log.Fatalf("unable to create a channel from estableshed connection: %v", err)
 	}
 
+	_, topicQueue, err := pubsub.DeclareAndBind(conn, routing.ExchangePerilTopic, routing.GameLogSlug, routing.GameLogSlug+".*", pubsub.Durable)
+	if err != nil {
+		log.Fatalf("Could not open topic queue: %v", err)
+	}
+	fmt.Printf("Queue %v declared and bound!\n", topicQueue.Name)
+
 	for {
 		userInput := gamelogic.GetInput()
 		if len(userInput) == 0 {
