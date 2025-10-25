@@ -33,6 +33,7 @@ func main() {
 	fmt.Printf("Queue %v declared and bound!\n", queue.Name)
 
 	gameState := gamelogic.NewGameState(username)
+	pubsub.SubscribeJSON(conn, routing.ExchangePerilDirect, routing.PauseKey+"."+username, routing.PauseKey, pubsub.Transient, handlerPause(gameState))
 
 	for {
 		userInput := gamelogic.GetInput()
