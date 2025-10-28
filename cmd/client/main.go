@@ -40,7 +40,12 @@ func main() {
 	}
 
 	// subscirbe to topic exchange
-	err = pubsub.SubscribeJSON(conn, routing.ExchangePerilTopic, routing.ArmyMovesPrefix+"."+gameState.GetUsername(), routing.ArmyMovesPrefix+".*", pubsub.Transient, handlerMove(gameState))
+	err = pubsub.SubscribeJSON(conn, routing.ExchangePerilTopic, routing.ArmyMovesPrefix+"."+gameState.GetUsername(), routing.ArmyMovesPrefix+".*", pubsub.Transient, handlerMove(gameState, publishCh))
+	if err != nil {
+		log.Fatalf("failed to subscribe to topic exchange: %v", err)
+	}
+
+	err = pubsub.SubscribeJSON(conn, routing.ExchangePerilTopic, routing.WarRecognitionsPrefix, routing.WarRecognitionsPrefix+".*", pubsub.Durable, handleWar(gameState))
 	if err != nil {
 		log.Fatalf("failed to subscribe to topic exchange: %v", err)
 	}
