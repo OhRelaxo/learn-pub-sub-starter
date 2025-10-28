@@ -23,10 +23,10 @@ func handlerMove(gs *gamelogic.GameState, ch *amqp091.Channel) func(gamelogic.Ar
 				Defender: gs.GetPlayerSnap(),
 			})
 			if err != nil {
-				log.Printf("failed to Publish Message: %v", err)
+				log.Printf("failed to Publish Message: %v, requeue the Message\n", err)
 				return pubsub.NackRequeue
 			}
-			return pubsub.NackRequeue
+			return pubsub.Ack
 		default:
 			return pubsub.NackDiscard
 		}
