@@ -16,24 +16,34 @@ func main() {
 
 	conn, err := amqp.Dial(serverUrl)
 	if err != nil {
-		log.Fatalf("failed to connect to amqp server: %v", err)
+		log.Fatalf("could not connect to RabbitMQ: %v", err)
 	}
 	defer conn.Close()
-	log.Println("successfully connected to server")
+	log.Println("successfully connected to RabbitMQ server")
+
+	publishCh, err := conn.Channel()
+	if err != nil {
+		log.Fatalf("could not create channel: %v", err)
+	}
 
 	username, err := gamelogic.ClientWelcome()
 	if err != nil {
-		log.Printf("failed to get username: %v", err)
+		log.Fatalf("failed to get username: %v", err)
 	}
-
-	_, queue, err := pubsub.DeclareAndBind(conn, routing.ExchangePerilDirect, routing.PauseKey+"."+username, routing.PauseKey, pubsub.Transient)
-	if err != nil {
-		log.Fatalf("could not subscribe to pause: %v\n", err)
-	}
-	fmt.Printf("Queue %v declared and bound!\n", queue.Name)
 
 	gameState := gamelogic.NewGameState(username)
-	pubsub.SubscribeJSON(conn, routing.ExchangePerilDirect, routing.PauseKey+"."+username, routing.PauseKey, pubsub.Transient, handlerPause(gameState))
+
+	// subscribe to pause direct exchange
+	err = pubsub.SubscribeJSON(conn, routing.ExchangePerilDirect, routing.PauseKey+"."+username, routing.PauseKey, pubsub.Transient, handlerPause(gameState))
+	if err != nil {
+		log.Fatalf("failed to subscribe to pause exchange: %v", err)
+	}
+
+	// subscirbe to topic exchange
+	err = pubsub.SubscribeJSON(conn, routing.ExchangePerilTopic, routing.ArmyMovesPrefix+"."+gameState.GetUsername(), routing.ArmyMovesPrefix+".*", pubsub.Transient, handlerMove(gameState))
+	if err != nil {
+		log.Fatalf("failed to subscribe to topic exchange: %v", err)
+	}
 
 	for {
 		userInput := gamelogic.GetInput()
@@ -51,6 +61,11 @@ func main() {
 			armyMove, err := gameState.CommandMove(userInput)
 			if err != nil {
 				log.Printf("failed to move army: %v\n", err)
+				continue
+			}
+			err = pubsub.PublishJSON(publishCh, routing.ExchangePerilTopic, routing.ArmyMovesPrefix+"."+gameState.GetUsername(), armyMove)
+			if err != nil {
+				log.Printf("failed to move units: %v\n", err)
 				continue
 			}
 			fmt.Printf("succesfully moved army to location: %v\n", armyMove.ToLocation)

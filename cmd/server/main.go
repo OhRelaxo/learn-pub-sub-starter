@@ -21,9 +21,7 @@ func main() {
 	defer conn.Close()
 	log.Println("successfully connected to server")
 
-	gamelogic.PrintServerHelp()
-
-	newChan, err := conn.Channel()
+	publishCh, err := conn.Channel()
 	if err != nil {
 		log.Fatalf("unable to create a channel from estableshed connection: %v", err)
 	}
@@ -32,7 +30,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not open topic queue: %v", err)
 	}
-	fmt.Printf("Queue %v declared and bound!\n", topicQueue.Name)
+	log.Printf("Queue %v declared and bound!\n", topicQueue.Name)
+
+	gamelogic.PrintServerHelp()
 
 	for {
 		userInput := gamelogic.GetInput()
@@ -42,14 +42,16 @@ func main() {
 		command := userInput[0]
 		switch command {
 		case "pause":
-			err = pubsub.PublishJSON(newChan, routing.ExchangePerilDirect, routing.PauseKey, routing.PlayingState{IsPaused: true})
+			fmt.Println("Publishing paused game state")
+			err = pubsub.PublishJSON(publishCh, routing.ExchangePerilDirect, routing.PauseKey, routing.PlayingState{IsPaused: true})
 			if err != nil {
-				log.Printf("failed to pause game: %v", err)
+				log.Printf("failed to pause game: %v\n", err)
 			}
 		case "resume":
-			err = pubsub.PublishJSON(newChan, routing.ExchangePerilDirect, routing.PauseKey, routing.PlayingState{IsPaused: false})
+			fmt.Println("Publishing resume game state")
+			err = pubsub.PublishJSON(publishCh, routing.ExchangePerilDirect, routing.PauseKey, routing.PlayingState{IsPaused: false})
 			if err != nil {
-				log.Printf("failed to pause game: %v", err)
+				log.Printf("failed to pause game: %v\n", err)
 			}
 		case "quit":
 			log.Println("exiting...")
