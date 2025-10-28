@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	const serverUrl = "amqp://guest:guest@localhost:5672/"
+	serverUrl := routing.GetServerUrl()
 	fmt.Println("Starting Peril server...")
 
 	conn, err := amqp.Dial(serverUrl)
