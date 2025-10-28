@@ -13,39 +13,42 @@ const (
 	Transient
 )
 
-func DeclareAndBind(
-	conn *amqp.Connection,
-	exchange,
-	queueName,
-	key string,
-	queueType SimpleQueueType,
-) (*amqp.Channel, amqp.Queue, error) {
-	connChan, err := conn.Channel()
+func DeclareAndBind(conn *amqp.Connection, exchange, queueName, key string, queueType SimpleQueueType) (*amqp.Channel, amqp.Queue, error) {
+	ch, err := conn.Channel()
 	if err != nil {
 		return nil, amqp.Queue{}, err
 	}
+
 	var isDurable bool
 	var autoDelete bool
 	var exclusive bool
+
 	switch queueType {
-	case 0:
+	case Durable:
 		isDurable = true
 		autoDelete = false
 		exclusive = false
-	case 1:
+	case Transient:
 		isDurable = false
 		autoDelete = true
 		exclusive = true
 	default:
 		return nil, amqp.Queue{}, fmt.Errorf("please use a valid value for queueType")
 	}
-	queue, err := connChan.QueueDeclare(queueName, isDurable, autoDelete, exclusive, false, nil)
+
+	table := amqp.Table{
+		"x-dead-letter-exchange": "peril_dlx",
+	}
+
+	queue, err := ch.QueueDeclare(queueName, isDurable, autoDelete, exclusive, false, table)
 	if err != nil {
 		return nil, amqp.Queue{}, err
 	}
-	err = connChan.QueueBind(queueName, key, exchange, false, nil)
+
+	err = ch.QueueBind(queueName, key, exchange, false, nil)
 	if err != nil {
 		return nil, amqp.Queue{}, err
 	}
-	return connChan, queue, nil
+
+	return ch, queue, nil
 }
