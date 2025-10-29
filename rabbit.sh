@@ -8,7 +8,7 @@ start_or_run () {
         docker start peril_rabbitmq
     else
         echo "Peril RabbitMQ container not found, creating a new one..."
-        docker run -d --name peril_rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.13-management
+        docker run -d --name peril_rabbitmq -p 5672:5672 -p 15672:15672 --env RABBITMQ_DEFAULT_USER=admin --env RABBITMQ_DEFAULT_PASS="$(cat rabbitmq_pass.txt)" rabbitmq:3.13-management
     fi
 }
 

@@ -2,16 +2,22 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/gamelogic"
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/pubsub"
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/routing"
 )
 
-func handlerPause(gs *gamelogic.GameState) func(routing.PlayingState) pubsub.Acktype {
-	return func(rout routing.PlayingState) pubsub.Acktype {
+func handleLog() func(gamelog routing.GameLog) pubsub.Acktype {
+	return func(gamelog routing.GameLog) pubsub.Acktype {
 		defer fmt.Print("> ")
-		gs.HandlePause(rout)
+
+		err := gamelogic.WriteLog(gamelog)
+		if err != nil {
+			log.Printf("error writing log: %v\n", err)
+			return pubsub.NackRequeue
+		}
 		return pubsub.Ack
 	}
 }
