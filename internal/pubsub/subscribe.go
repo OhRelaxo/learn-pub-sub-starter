@@ -1,7 +1,6 @@
 package pubsub
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -16,18 +15,6 @@ const (
 	NackRequeue
 	NackDiscard
 )
-
-func PublishJSON[T any](ch *amqp.Channel, exchange, key string, val T) error {
-	message, err := json.Marshal(val)
-	if err != nil {
-		return err
-	}
-
-	return ch.PublishWithContext(context.Background(), exchange, key, false, false, amqp.Publishing{
-		ContentType: "application/json",
-		Body:        message,
-	})
-}
 
 func SubscribeJSON[T any](conn *amqp.Connection, exchange, queueName, key string, queueType SimpleQueueType, handler func(T) Acktype) error {
 	ch, queue, err := DeclareAndBind(conn, exchange, queueName, key, queueType)

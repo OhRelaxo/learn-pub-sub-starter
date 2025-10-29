@@ -45,7 +45,7 @@ func main() {
 		log.Fatalf("failed to subscribe to topic exchange: %v", err)
 	}
 
-	err = pubsub.SubscribeJSON(conn, routing.ExchangePerilTopic, routing.WarRecognitionsPrefix, routing.WarRecognitionsPrefix+".*", pubsub.Durable, handleWar(gameState))
+	err = pubsub.SubscribeJSON(conn, routing.ExchangePerilTopic, routing.WarRecognitionsPrefix, routing.WarRecognitionsPrefix+".*", pubsub.Durable, handleWar(gameState, publishCh))
 	if err != nil {
 		log.Fatalf("failed to subscribe to topic exchange: %v", err)
 	}
