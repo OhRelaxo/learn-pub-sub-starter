@@ -23,6 +23,12 @@ func subscribe[T any](conn *amqp.Connection, exchange, queueName, key string, qu
 	if err != nil {
 		return fmt.Errorf("could not declare and bind queue: %v", err)
 	}
+
+	err = ch.Qos(10, 0, true)
+	if err != nil {
+		return fmt.Errorf("could not Qos messages: %v", err)
+	}
+
 	messages, err := ch.Consume(queue.Name, "", false, false, false, false, nil)
 	if err != nil {
 		return fmt.Errorf("could not consume messages: %v", err)
@@ -54,10 +60,7 @@ func SubscribeJSON[T any](conn *amqp.Connection, exchange, queueName, key string
 	return subscribe(conn, exchange, queueName, key, queueType, handler, func(b []byte) (T, error) {
 		var decodedMessage T
 		err := json.Unmarshal(b, &decodedMessage)
-		if err != nil {
-			return decodedMessage, err
-		}
-		return decodedMessage, nil
+		return decodedMessage, err
 	})
 }
 
@@ -67,9 +70,6 @@ func SubscribeGob[T any](conn *amqp.Connection, exchange, queueName, key string,
 		decoder := gob.NewDecoder(buffer)
 		var decodedMessage T
 		err := decoder.Decode(&decodedMessage)
-		if err != nil {
-			return decodedMessage, err
-		}
-		return decodedMessage, nil
+		return decodedMessage, err
 	})
 }

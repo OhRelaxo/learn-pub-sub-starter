@@ -12,6 +12,7 @@ import (
 func handleLog() func(gamelog routing.GameLog) pubsub.Acktype {
 	return func(gamelog routing.GameLog) pubsub.Acktype {
 		defer fmt.Print("> ")
+
 		err := gamelogic.WriteLog(gamelog)
 		if err != nil {
 			log.Printf("error writing log: %v\n", err)

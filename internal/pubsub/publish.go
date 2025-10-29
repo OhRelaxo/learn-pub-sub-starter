@@ -86,14 +86,9 @@ func PublishGob[T any](ch *amqp.Channel, exchange, key string, val T) error {
 }
 
 func PublishGameLog(publishCh *amqp.Channel, username, msg string) error {
-	return PublishGob(
-		publishCh,
-		routing.ExchangePerilTopic,
-		routing.GameLogSlug+"."+username,
-		routing.GameLog{
-			Username:    username,
-			CurrentTime: time.Now(),
-			Message:     msg,
-		},
-	)
+	return PublishGob(publishCh, routing.ExchangePerilTopic, routing.GameLogSlug+"."+username, routing.GameLog{
+		Username:    username,
+		CurrentTime: time.Now(),
+		Message:     msg,
+	})
 }
