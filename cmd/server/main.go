@@ -26,11 +26,11 @@ func main() {
 		log.Fatalf("unable to create a channel from estableshed connection: %v", err)
 	}
 
-	_, topicQueue, err := pubsub.DeclareAndBind(conn, routing.ExchangePerilTopic, routing.GameLogSlug, routing.GameLogSlug+".*", pubsub.Durable)
+	err = pubsub.SubscribeGob(conn, routing.ExchangePerilTopic, routing.GameLogSlug, routing.GameLogSlug+".*", pubsub.Durable, handleLog())
 	if err != nil {
 		log.Fatalf("Could not open topic queue: %v", err)
 	}
-	log.Printf("Queue %v declared and bound!\n", topicQueue.Name)
+	log.Printf("Queue: %v declared and bound!\n", routing.GameLogSlug)
 
 	gamelogic.PrintServerHelp()
 
